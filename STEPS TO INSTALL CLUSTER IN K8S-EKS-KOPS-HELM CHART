@@ -1,0 +1,162 @@
+CLUSTER INSTALLATION IN KUBERNETES
+KUBERNETIES-KOPS
+=================
+curl -Lo kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
+chmod +x kops
+sudo mv kops /usr/local/bin/kops
+
+KUBECTL-LINUX INSTALLATION
+=============================
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+
+AWS CONFIGURE
+=============
+aws configure
+apt get update
+apt install awscli
+
+AWS_ACCESS_KEY_ID=AKIAZ5ZAPFHQXFNNIP5F
+AWS_SECRET_ACCESS_KEY=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 
+ap-south-1
+json
+=======================================================================================================================
+
+EXPORTING NAME AND ARRAGING THE KOPS STATE STORE LOCATION AS S3 BUCKET LOCATION
+================================================================================
+export NAME=cat.k8s.local
+export KOPS_STATE_STORE=s3://kops1741
+export AWS_ACCESS_KEY_ID=AKIAZ5ZAPFHQXFNNIP5F
+export AWS_SECRET_ACCESS_KEY=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 
+
+TO CREATE CLUSTER
+==================
+ kops create cluster --zones ap-south-1a ${NAME}
+or
+kops create cluster --name=goat.k8s.local \
+  --state=s3://kops1741 \
+  --zones=ap-south-1a \
+  --node-count=1
+
+Suggestions: TO EDIT CLUSTER
+=============================
+  kops get cluster
+  kops edit cluster cat.k8s.local
+ 
+  kops edit ig --name=goat.k8s.local nodes-ap-south-1a
+  kops edit ig --name=goat.k8s.local control-plane-ap-south-1a
+
+Finally configure cluster with: 
+==============================
+kops update cluster --name goat.k8s.local --yes --admin
+
+Suggestions:
+============
+kops validate cluster --wait 10m    # * validate cluster: 
+kubectl get nodes --show-labels     # * list nodes: 
+ssh -i ~/.ssh/id_rsa ubuntu@       # * ssh to a control-plane node: 
+
+ * read about installing addons at: https://kops.sigs.k8s.io/addons.
+
+=====================================================================================================================================
+
+
+HELM-CHART
+==========
+HELM-PACKAGE INSTALLATION
+--------------------------
+wget https://get.helm.sh/helm-v3.9.3-linux-amd64.tar.gz
+tar xvf helm-v3.9.3-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin
+helm version
+
+HELM OPERATION COMMANDS
+-------------------------
+helm create package_name                            #To create package
+helm install chart_name ./package_name              #To create chart
+helm ls                                             #To list chart
+helm uninstall chart_name                           #To delete chart
+
+HELM PACKAGE (VERSIONING)
+--------------------------
+helm package ./package_name                          #To create as a package
+
+=====================================================================================================================================
+
+INGRESS CONTROLLER
+=====================
+Step 1: Install Ingress Controller
+==================================
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.0.4/deploy/static/provider/aws/deploy.yaml
+
+#ingress will create pod and run in ingress-nginx namespace
+-----------------------------------------------------------
+#myapp-ingress
+==============
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress
+spec:
+  rules:
+    - host: gowtham.shop
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: myapp-service
+                port:
+                  number: 80
+
+
+kubectl apply -f myapp-ingress.yaml
+kubectl get ingress myapp-ingress
+kubectl get svc -n ingress-nginx
+
+=====================================================================================================================================
+
+
+
+EKS CLUSTER CREATION
+=====================
+STEP TO INSTALL KUBECTL
+-------------------------
+curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl version –client
+
+STEP TO INSTALL EKSCTL
+------------------------
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+eksctl version
+
+STEP TO CREATE CLUSTER
+------------------------
+eksctl create cluster --name goat --version 1.29 --region ap-south-1 --nodegroup-name standard-workers --node-type t2.medium --nodes 1 --nodes-min 1 --nodes-max 1 
+or
+eksctl create cluster --name godzilla --region ap-south-1 --node-type t2.medium --nodes-max 1 --nodes-min 1
+or
+eksctl create cluster --name goat  \
+--region ap-south-1 \
+--node-type t2.medium \
+--nodes-min 1 \
+--nodes-max 1 \ 
+--zones <AZ-1>,<AZ-2>
+
+aws eks --region ap-south-1 update-kubeconfig --name goat
+
+STEP TO DELETE EKSCTL CLUSTER
+--------------------------------
+eksctl delete cluster goat
+
+
+=====================================================================================================================================
+A new kubernetes version is available: 1.28.9
+Upgrading is recommended (try kops upgrade cluster)
+
+More information: https://github.com/kubernetes/kops/blob/master/permalinks/upgrade_k8s.md#1.28.9
