@@ -25,7 +25,7 @@ json
 
 EXPORTING NAME AND ARRAGING THE KOPS STATE STORE LOCATION AS S3 BUCKET LOCATION
 ================================================================================
-export NAME=cat.k8s.local
+export NAME=kops.k8s.local
 export KOPS_STATE_STORE=s3://kops1741
 export AWS_ACCESS_KEY_ID=AKIAZ5ZAPFHQXFNNIP5F
 export AWS_SECRET_ACCESS_KEY=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 
@@ -34,7 +34,7 @@ TO CREATE CLUSTER
 ==================
  kops create cluster --zones ap-south-1a ${NAME}
 or
-kops create cluster --name=goat.k8s.local \
+kops create cluster --name=kops.k8s.local \
   --state=s3://kops1741 \
   --zones=ap-south-1a \
   --node-count=1
@@ -42,14 +42,14 @@ kops create cluster --name=goat.k8s.local \
 Suggestions: TO EDIT CLUSTER
 =============================
   kops get cluster
-  kops edit cluster cat.k8s.local
+  kops edit cluster kops.k8s.local
  
-  kops edit ig --name=goat.k8s.local nodes-ap-south-1a
-  kops edit ig --name=goat.k8s.local control-plane-ap-south-1a
+  kops edit ig --name=kops.k8s.local nodes-ap-south-1a
+  kops edit ig --name=kops.k8s.local control-plane-ap-south-1a
 
 Finally configure cluster with: 
 ==============================
-kops update cluster --name goat.k8s.local --yes --admin
+kops update cluster --name kops.k8s.local --yes --admin
 
 Suggestions:
 ============
